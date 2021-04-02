@@ -7,11 +7,12 @@
 - Typescript
 - React
 - GraphQL(Apollo)
+- Tailwind CSS
 
 ## 배포
 
 Netlify를 이용해서 배포할 계획입니다. 임시 CodeSandbox 주소는 아래와 같습니다.
 
 ```
-https://nestjs-podcast-backend.herokuapp.com/graphql
+https://codesandbox.io/s/hopeful-silence-wpkxl
 ```

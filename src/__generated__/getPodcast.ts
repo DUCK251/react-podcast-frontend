@@ -12,6 +12,7 @@ import { PodcastSearchInput } from "./globalTypes";
 export interface getPodcast_getPodcast_podcast_episodes {
   __typename: "Episode";
   id: number;
+  createdAt: any;
   title: string;
   category: string;
   audioURL: string | null;
@@ -45,6 +46,7 @@ export interface getPodcast_getPodcast_podcast {
   description: string | null;
   coverImage: string | null;
   rating: number;
+  totalSubscribers: number | null;
   episodes: getPodcast_getPodcast_podcast_episodes[];
   reviews: getPodcast_getPodcast_podcast_reviews[];
   creator: getPodcast_getPodcast_podcast_creator;

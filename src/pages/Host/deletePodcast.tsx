@@ -2,14 +2,17 @@ import React, { useEffect } from "react";
 import { gql, useMutation, useQuery } from "@apollo/client";
 import { useHistory, useParams } from "react-router";
 import { Helmet } from "react-helmet-async";
+import { useMe } from "../../hooks/useMe";
+import {
+  getPodcast,
+  getPodcastVariables,
+} from "../../__generated__/getPodcast";
+import { PODCAST_QUERY } from "../../queries";
 import {
   deletePodcastMutation,
   deletePodcastMutationVariables,
-} from "../__generated__/deletePodcastMutation";
-import { getPodcast, getPodcastVariables } from "../__generated__/getPodcast";
-import { PODCAST_QUERY } from "./podcast";
-import { useMe } from "../hooks/useMe";
-import { UserRole } from "../__generated__/globalTypes";
+} from "../../__generated__/deletePodcastMutation";
+import { UserRole } from "../../__generated__/globalTypes";
 
 const DELETE_PODCAST_MUTATION = gql`
   mutation deletePodcastMutation($input: PodcastSearchInput!) {
@@ -27,8 +30,11 @@ interface IPodcastParams {
 export const DeletePodcast = () => {
   const history = useHistory();
   const params = useParams<IPodcastParams>();
-  const { data: useMeResult } = useMe();
-  const { data } = useQuery<getPodcast, getPodcastVariables>(PODCAST_QUERY, {
+  const { data: useMeResult, loading: useMeLoading } = useMe();
+  const { data, loading: podcastLoading } = useQuery<
+    getPodcast,
+    getPodcastVariables
+  >(PODCAST_QUERY, {
     variables: { input: { id: +params.id } },
   });
   const [deletePodcastMutation] = useMutation<
@@ -43,12 +49,14 @@ export const DeletePodcast = () => {
     },
   });
   useEffect(() => {
-    const curUser = { ...useMeResult?.me };
-    if (curUser.role !== UserRole.Host) {
-      history.push("/");
-    }
-    if (curUser.id !== data?.getPodcast.podcast?.creator.id) {
-      history.push("/");
+    if (!useMeLoading && !podcastLoading) {
+      const curUser = { ...useMeResult?.me };
+      if (curUser.role !== UserRole.Host) {
+        history.push("/");
+      }
+      if (curUser.id !== data?.getPodcast.podcast?.creator.id) {
+        history.push("/");
+      }
     }
   });
   return (

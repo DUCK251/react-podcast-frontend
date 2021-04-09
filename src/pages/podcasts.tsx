@@ -1,8 +1,10 @@
-import { gql, useLazyQuery, useQuery } from "@apollo/client";
+import { gql, useLazyQuery } from "@apollo/client";
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { Loading } from "../components/loading";
 import { Pages } from "../components/page";
 import { PodcastCard } from "../components/podcastCard";
+import { CATEGORIES } from "../constants";
 import {
   podcastsPageQuery,
   podcastsPageQueryVariables,
@@ -29,19 +31,6 @@ const PODCASTS_QUERY = gql`
   }
 `;
 
-const Categories = [
-  "All",
-  "News",
-  "Culture",
-  "Education",
-  "Business",
-  "Health",
-  "Art",
-  "Sports",
-  "Science",
-  "History",
-];
-
 export const Podcasts = () => {
   const [page, setPage] = useState(1);
   const [categoryIndex, setCategoryIndex] = useState(0);
@@ -50,7 +39,7 @@ export const Podcasts = () => {
     podcastsPageQueryVariables
   >(PODCASTS_QUERY);
   useEffect(() => {
-    const category = categoryIndex === 0 ? null : Categories[categoryIndex];
+    const category = categoryIndex === 0 ? null : CATEGORIES[categoryIndex];
     callQuery({
       variables: {
         input: {
@@ -62,31 +51,12 @@ export const Podcasts = () => {
   }, [callQuery, page, categoryIndex]);
   return loading ? (
     <div className="min-h-screen w-full max-w-screen-md mx-auto flex flex-col bg-blue-300">
-      <div className="flex overflow-auto px-4 py-3">
-        {Categories.map((category, idx) => (
-          <div className="flex" key={idx}>
-            <span
-              className={`mx-1 px-2 ${
-                idx === categoryIndex ? "bg-blue-600" : "bg-blue-400"
-              } hover:bg-blue-600 cursor-pointer rounded-3xl text-white`}
-              onClick={() => {
-                setPage(1);
-                setCategoryIndex(idx);
-              }}
-            >
-              {category}
-            </span>
-          </div>
-        ))}
-      </div>
-      <div className="flex px-4 py-2 bg-blue-400 text-white justify-center">
-        Loading...
-      </div>
+      <Loading />
     </div>
   ) : (
     <div className="min-h-screen w-full max-w-screen-md mx-auto flex flex-col bg-blue-300">
       <div className="flex overflow-auto px-4 py-3">
-        {Categories.map((category, idx) => (
+        {CATEGORIES.map((category, idx) => (
           <div className="flex" key={idx}>
             <span
               className={`mx-1 px-2 ${
@@ -115,7 +85,6 @@ export const Podcasts = () => {
             description={podcast.description || "No Description"}
             totalSubscribers={podcast.totalSubscribers || 0}
           />
-          <hr className="border border-blue-200"></hr>
         </Link>
       ))}
     </div>

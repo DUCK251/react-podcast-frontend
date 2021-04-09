@@ -5,11 +5,13 @@ import {
   makeVar,
 } from "@apollo/client";
 import { setContext } from "@apollo/client/link/context";
-import { LOCALSTORAGE_TOKEN } from "./constants";
+import { CURRENT_EPISODE, LOCALSTORAGE_TOKEN } from "./constants";
 
 const token = localStorage.getItem(LOCALSTORAGE_TOKEN);
+const currentEpisode = localStorage.getItem(CURRENT_EPISODE);
 export const isLoggedInVar = makeVar(Boolean(token));
 export const authTokenVar = makeVar(token);
+export const currentEpisodeVar = makeVar(currentEpisode);
 
 const httpLink = createHttpLink({
   uri: "https://nestjs-podcast-backend.herokuapp.com/graphql",
@@ -38,6 +40,11 @@ export const client = new ApolloClient({
           token: {
             read() {
               return authTokenVar();
+            },
+          },
+          currentEpisode: {
+            read() {
+              return currentEpisodeVar();
             },
           },
         },

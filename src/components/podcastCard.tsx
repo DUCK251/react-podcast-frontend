@@ -1,8 +1,6 @@
 import { faStar } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { url } from "node:inspector";
 import React from "react";
-import { StarRating } from "./star-rating";
 
 interface IPodcastProps {
   id: number;
@@ -23,19 +21,6 @@ const getDateString = (date: any): string => {
   return `${y}-${m}-${d}`;
 };
 
-const getWidthScaleForRate = (rating: number): number => {
-  let minDistance = 1000;
-  let ScaledWidth = 0;
-  for (let width = 0; width <= 20; ++width) {
-    const distance = Math.abs(rating * 20 - width * 5);
-    if (distance < minDistance) {
-      minDistance = distance;
-      ScaledWidth = width;
-    }
-  }
-  return ScaledWidth;
-};
-
 export const PodcastCard: React.FC<IPodcastProps> = ({
   id,
   title,
@@ -46,7 +31,10 @@ export const PodcastCard: React.FC<IPodcastProps> = ({
   coverImage,
   totalSubscribers,
 }) => (
-  <div key={id} className="flex px-4 py-2 bg-white text-black justify-between">
+  <div
+    key={id}
+    className="flex px-4 py-2 bg-blue-300 text-black justify-between"
+  >
     <div className="flex flex-col md:flex-row w-full">
       <div className="flex justify-between">
         <div className="flex">
@@ -70,11 +58,7 @@ export const PodcastCard: React.FC<IPodcastProps> = ({
       </div>
       <div className="flex flex-col w-full max-w-xl">
         <small className="hidden md:flex">{category}</small>
-        <div className="hidden md:flex items-center">
-          {title}(
-          <StarRating rating={rating} />)
-        </div>
-        <p className="truncate">{description}</p>
+        <div className="hidden md:flex items-center">{title}</div>
         <small className="hidden md:flex">{getDateString(updatedAt)}</small>
       </div>
     </div>

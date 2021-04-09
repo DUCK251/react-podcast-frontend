@@ -1,59 +1,80 @@
+import { gql, useApolloClient, useMutation } from "@apollo/client";
 import React from "react";
-import { gql, useMutation } from "@apollo/client";
-import { Helmet } from "react-helmet";
+import { Helmet } from "react-helmet-async";
 import { useForm } from "react-hook-form";
-import { Link } from "react-router-dom";
-import { authTokenVar, isLoggedInVar } from "../apollo";
+import { useHistory } from "react-router";
 import { Button } from "../components/button";
 import { FormError } from "../components/formError";
-import { LOCALSTORAGE_TOKEN } from "../constants";
+import { useMe } from "../hooks/useMe";
 import {
-  loginMutation,
-  loginMutationVariables,
-} from "../__generated__/loginMutation";
+  editProfileMutation,
+  editProfileMutationVariables,
+} from "../__generated__/editProfileMutation";
 
-const LOGIN_MUTATION = gql`
-  mutation loginMutation($loginInput: LoginInput!) {
-    login(input: $loginInput) {
+const EDIT_PROFILE_MUTATION = gql`
+  mutation editProfileMutation($input: EditProfileInput!) {
+    editProfile(input: $input) {
       ok
-      token
       error
     }
   }
 `;
 
-interface ILoginForm {
+interface IEditAccountForm {
   email: string;
   password: string;
-  resultError?: string;
 }
 
-export const Login = () => {
-  const { register, getValues, errors, handleSubmit } = useForm<ILoginForm>({
-    mode: "onBlur",
+export const UpdateProfile = () => {
+  const client = useApolloClient();
+  const history = useHistory();
+  const { data: useMeResult } = useMe();
+  const {
+    register,
+    getValues,
+    errors,
+    handleSubmit,
+  } = useForm<IEditAccountForm>({
+    mode: "onChange",
+    defaultValues: {
+      email: useMeResult?.me.email,
+    },
   });
-  const onCompleted = (data: loginMutation) => {
+  const onCompleted = (data: editProfileMutation) => {
     const {
-      login: { ok, token },
+      editProfile: { ok },
     } = data;
-    if (ok && token) {
-      localStorage.setItem(LOCALSTORAGE_TOKEN, token);
-      authTokenVar(token);
-      isLoggedInVar(true);
+    if (ok) {
+      alert("Profile Edited");
+      const { email } = getValues();
+      if (email) {
+        client.writeFragment({
+          id: `User:${useMeResult?.me.id}`,
+          fragment: gql`
+            fragment Me on User {
+              email
+            }
+          `,
+          data: {
+            email,
+          },
+        });
+      }
+      history.push("/");
     }
   };
-  const [loginMutation, { data: loginMutationResult, loading }] = useMutation<
-    loginMutation,
-    loginMutationVariables
-  >(LOGIN_MUTATION, {
+  const [editProfileMutation, { loading, data }] = useMutation<
+    editProfileMutation,
+    editProfileMutationVariables
+  >(EDIT_PROFILE_MUTATION, {
     onCompleted,
   });
   const onSubmit = () => {
     if (!loading) {
       const { email, password } = getValues();
-      loginMutation({
+      editProfileMutation({
         variables: {
-          loginInput: {
+          input: {
             email,
             password,
           },
@@ -62,16 +83,13 @@ export const Login = () => {
     }
   };
   return (
-    <div className="w-full h-screen flex flex-col bg-blue-100">
+    <div className="min-h-screen w-full max-w-screen-md mx-auto flex flex-col bg-blue-100 p-4">
       <Helmet>
-        <title>Login | Podcast</title>
+        <title>Profile</title>
       </Helmet>
       <div className="w-full md:max-w-sm flex-col px-4 lg:p-10 items-center mt-10 lg:mt-28 mx-auto lg:border border-blue-400 rounded-lg">
         <h4 className="w-full text-center mb-5 text-blue-900 text-2xl">
-          PODCAST
-        </h4>
-        <h4 className="w-full text-center mb-5 text-blue-900 text-xl">
-          Sign in to your account
+          Edit Profile
         </h4>
         <hr className="border border-blue-200"></hr>
         <form
@@ -80,11 +98,10 @@ export const Login = () => {
         >
           <input
             ref={register({
-              required: "Email is required",
+              required: false,
               pattern: /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/,
             })}
             name="email"
-            required
             type="email"
             placeholder="Email"
             className="input rounded-3xl"
@@ -96,8 +113,7 @@ export const Login = () => {
             <FormError errorMessage={"Please enter a valid email"} />
           )}
           <input
-            ref={register({ required: "Password is required" })}
-            required
+            ref={register({ required: false })}
             name="password"
             type="password"
             placeholder="Password"
@@ -109,17 +125,11 @@ export const Login = () => {
           {errors.password?.type === "minLength" && (
             <FormError errorMessage="Password must be more than 10 chars." />
           )}
-          <Button loading={loading} actionText={"Log in"} />
-          {loginMutationResult?.login.error && (
-            <FormError errorMessage={loginMutationResult.login.error} />
+          <Button loading={loading} actionText={"Submit"} />
+          {data?.editProfile.error && (
+            <FormError errorMessage={data.editProfile.error} />
           )}
         </form>
-        <div>
-          New to Podcast?{" "}
-          <Link to="/create-account" className="text-blue-900 hover:underline">
-            Create an Account
-          </Link>
-        </div>
       </div>
     </div>
   );

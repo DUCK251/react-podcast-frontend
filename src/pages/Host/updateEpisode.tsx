@@ -3,61 +3,75 @@ import { gql, useMutation, useQuery } from "@apollo/client";
 import { Helmet } from "react-helmet";
 import { useForm } from "react-hook-form";
 import { useHistory, useParams } from "react-router-dom";
-import { useMe } from "../hooks/useMe";
-import { getPodcast, getPodcastVariables } from "../__generated__/getPodcast";
-import { PODCAST_QUERY } from "./podcast";
-import { UserRole } from "../__generated__/globalTypes";
+import { useMe } from "../../hooks/useMe";
 import {
-  createEpisodeMutation,
-  createEpisodeMutationVariables,
-} from "../__generated__/createEpisodeMutation";
+  getPodcast,
+  getPodcastVariables,
+} from "../../__generated__/getPodcast";
+import { PODCAST_QUERY } from "../../queries";
+import {
+  updateEpisodeMutation,
+  updateEpisodeMutationVariables,
+} from "../../__generated__/updateEpisodeMutation";
+import { UserRole } from "../../__generated__/globalTypes";
+import { Loading } from "../../components/loading";
 
-const CREATE_EPISODE_MUTATION = gql`
-  mutation createEpisodeMutation($input: CreateEpisodeInput!) {
-    createEpisode(input: $input) {
+const UPDATE_EPISODE_MUTATION = gql`
+  mutation updateEpisodeMutation($input: UpdateEpisodeInput!) {
+    updateEpisode(input: $input) {
       ok
-      id
       error
     }
   }
 `;
 
-interface ICreateEpisodeForm {
+interface IUpdateEpisodeForm {
   title: string;
-  file: FileList;
 }
 
 interface IEpisodeParams {
   podcastId: string;
+  episodeId: string;
 }
 
-export const CreateEpisode = () => {
+export const UpdateEpisode = () => {
   const [uploading, setUploading] = useState(false);
   const history = useHistory();
   const params = useParams<IEpisodeParams>();
+  const {
+    register,
+    getValues,
+    handleSubmit,
+    setValue,
+  } = useForm<IUpdateEpisodeForm>({
+    mode: "onChange",
+  });
   const { loading: useMeLoading, data: useMeResult } = useMe();
   const { loading: podcastLoading, data: podcastData } = useQuery<
     getPodcast,
     getPodcastVariables
   >(PODCAST_QUERY, {
     variables: { input: { id: +params.podcastId } },
+    onCompleted(data: getPodcast) {
+      const episode = data?.getPodcast.podcast?.episodes.find(
+        (episode) => episode.id === +params.episodeId
+      );
+      setValue("title", episode?.title);
+    },
   });
-  const { register, getValues, handleSubmit } = useForm<ICreateEpisodeForm>({
-    mode: "onChange",
-  });
-  const onCompleted = (data: createEpisodeMutation) => {
+  const onCompleted = (data: updateEpisodeMutation) => {
     const {
-      createEpisode: { ok },
+      updateEpisode: { ok },
     } = data;
-    setUploading(false);
     if (ok) {
       history.goBack();
     }
+    setUploading(false);
   };
-  const [createEpisodeMutation, { loading }] = useMutation<
-    createEpisodeMutation,
-    createEpisodeMutationVariables
-  >(CREATE_EPISODE_MUTATION, {
+  const [updateEpisodeMutation, { loading }] = useMutation<
+    updateEpisodeMutation,
+    updateEpisodeMutationVariables
+  >(UPDATE_EPISODE_MUTATION, {
     onCompleted,
     refetchQueries: [
       {
@@ -74,22 +88,14 @@ export const CreateEpisode = () => {
     if (!uploading && podcastData?.getPodcast.podcast) {
       setUploading(true);
       try {
-        const { title, file } = getValues();
-        const actualFile = file[0];
-        const formBody = new FormData();
-        formBody.append("file", actualFile);
-        const { url: audioURL } = await (
-          await fetch("https://nestjs-podcast-backend.herokuapp.com/uploads/", {
-            method: "POST",
-            body: formBody,
-          })
-        ).json();
-        const { id: podcastId, category } = {
-          ...podcastData?.getPodcast.podcast,
-        };
-        createEpisodeMutation({
+        const { title } = getValues();
+        updateEpisodeMutation({
           variables: {
-            input: { title, category, audioURL, podcastId },
+            input: {
+              title,
+              podcastId: +params.podcastId,
+              episodeId: +params.episodeId,
+            },
           },
         });
       } catch (e) {
@@ -106,20 +112,31 @@ export const CreateEpisode = () => {
       if (curUser.id !== podcastData?.getPodcast.podcast?.creator.id) {
         history.push("/");
       }
+      const episode = podcastData?.getPodcast.podcast?.episodes.find(
+        (episode) => episode.id === +params.episodeId
+      );
+      if (!episode) {
+        history.push("/");
+      }
     }
-  }, []);
-  return (
+  });
+  return useMeLoading || podcastLoading || loading ? (
+    <div className="min-h-screen w-full max-w-screen-md mx-auto flex flex-col bg-blue-100 p-4">
+      <Loading />
+    </div>
+  ) : (
     <div className="min-h-screen w-full max-w-screen-md mx-auto flex flex-col bg-blue-100 p-4">
       <Helmet>
-        <title>Create Episode</title>
+        <title>Update Episode</title>
       </Helmet>
       <div className="flex flex-col w-full">
-        <h4 className="w-full text-center mb-5 text-2xl">Create Episode</h4>
+        <h4 className="w-full text-center mb-5 text-2xl">Update Episode</h4>
         <hr className="border border-blue-200"></hr>
         <form
           onSubmit={handleSubmit(onSubmit)}
           className="grid gap-3 w-full my-5"
         >
+          <p className="w-full text-center text-xl">Title</p>
           <input
             ref={register({
               required: "Title is required",
@@ -127,14 +144,7 @@ export const CreateEpisode = () => {
             name="title"
             required
             type="text"
-            placeholder="Title"
             className="input rounded-xl"
-          />
-          <input
-            type="file"
-            name="file"
-            accept="audio/*"
-            ref={register({ required: true })}
           />
           <button
             className={`focus:outline-none w-1/2 md:w-1/3 mx-auto text-white py-3  transition-colors rounded-3xl bg-blue-600 hover:bg-blue-700`}

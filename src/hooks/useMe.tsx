@@ -9,6 +9,18 @@ export const ME_QUERY = gql`
       role
       subscriptions {
         id
+        title
+        category
+        coverImage
+      }
+      podcasts {
+        id
+        title
+        category
+        coverImage
+      }
+      playedEpisodes {
+        id
       }
     }
   }

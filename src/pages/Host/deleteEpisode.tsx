@@ -2,14 +2,17 @@ import React, { useEffect, useState } from "react";
 import { gql, useMutation, useQuery } from "@apollo/client";
 import { useHistory, useParams } from "react-router";
 import { Helmet } from "react-helmet-async";
-import { getPodcast, getPodcastVariables } from "../__generated__/getPodcast";
-import { PODCAST_QUERY } from "./podcast";
-import { useMe } from "../hooks/useMe";
-import { UserRole } from "../__generated__/globalTypes";
+import { useMe } from "../../hooks/useMe";
+import {
+  getPodcast,
+  getPodcastVariables,
+} from "../../__generated__/getPodcast";
+import { PODCAST_QUERY } from "../../queries";
 import {
   deleteEpisodeMutation,
   deleteEpisodeMutationVariables,
-} from "../__generated__/deleteEpisodeMutation";
+} from "../../__generated__/deleteEpisodeMutation";
+import { UserRole } from "../../__generated__/globalTypes";
 
 const DELETE_EPISODE_MUTATION = gql`
   mutation deleteEpisodeMutation($input: EpisodesSearchInput!) {
@@ -65,7 +68,7 @@ export const DeleteEpisode = () => {
         history.push("/");
       }
     }
-  });
+  }, []);
   return (
     <div className="min-h-screen w-full max-w-screen-md mx-auto flex flex-col bg-blue-100 p-4">
       <Helmet>

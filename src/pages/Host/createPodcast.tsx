@@ -3,11 +3,11 @@ import { gql, useMutation } from "@apollo/client";
 import { Helmet } from "react-helmet";
 import { useForm } from "react-hook-form";
 import { useHistory } from "react-router-dom";
-import { CATEGORIES } from "../constants";
 import {
   createPodcastMutation,
   createPodcastMutationVariables,
-} from "../__generated__/createPodcastMutation";
+} from "../../__generated__/createPodcastMutation";
+import { CATEGORIES } from "../../constants";
 
 const CREATE_PODCAST_MUTATION = gql`
   mutation createPodcastMutation($input: CreatePodcastInput!) {
@@ -48,7 +48,7 @@ export const CreatePodcast = () => {
       history.push("/");
     }
   };
-  const [createPodcastMutation, { loading }] = useMutation<
+  const [createPodcastMutation] = useMutation<
     createPodcastMutation,
     createPodcastMutationVariables
   >(CREATE_PODCAST_MUTATION, {

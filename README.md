@@ -11,8 +11,8 @@
 
 ## 배포
 
-Netlify를 이용해서 배포할 계획입니다. 임시 CodeSandbox 주소는 아래와 같습니다.
+Netlify를 이용한 배포 주소는 아래와 같습니다.
 
 ```
-https://codesandbox.io/s/hopeful-silence-wpkxl
+https://mystifying-panini-b101c8.netlify.app/
 ```
